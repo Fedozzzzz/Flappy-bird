@@ -58,12 +58,12 @@ class Bird extends GameImage {
     draw() {
         let bird = this.animation[this.frame];
         // console.log(bird);
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
+        // ctx.save();
+        // ctx.translate(this.x, this.y);
+        // ctx.rotate(this.rotation);
         ctx.drawImage(sprite, bird.sX, bird.sY, this.w,
-            this.h, this.w / 2, -this.h / 2, this.w, this.h);
-        ctx.restore();
+            this.h, this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
+        // ctx.restore();
     }
 
     flap() {
@@ -87,12 +87,12 @@ class Bird extends GameImage {
                 }
             }
 
-            if (this.speed >= this.jump) {
-                this.rotation = 90 * DEGREE;
-                this.frame = 1;
-            } else {
-                this.rotation = -25 * DEGREE
-            }
+            // if (this.speed >= this.jump) {
+            //     this.rotation = 90 * DEGREE;
+            //     this.frame = 1;
+            // } else {
+            //     this.rotation = -25 * DEGREE
+            // }
         }
     }
 }
