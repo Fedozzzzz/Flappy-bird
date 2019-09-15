@@ -56,6 +56,7 @@ class Bird extends GameObject {
         this.speed = 0;
         this.jump = 4.6;
         this.rotation = 0;
+        this.radius = 12;
     }
 
     draw() {
@@ -122,10 +123,22 @@ class Pipes {
             })
         }
         for (let it of this.position) {
-            it.x -= this.dx;
+
+            let bottomPipeYPos = it.y + this.pipeBottom.h + this.gap;
+            let leftBorderBird = bird.x - bird.radius;
+            let rightBorderBird = bird.x + bird.radius;
+            let topBorderBird = bird.y - bird.radius;
+            let bottomBorderBird = bird.y + bird.radius;
+            if ((rightBorderBird > it.x && leftBorderBird < it.x + this.pipeTop.w
+                && bottomBorderBird > it.y && topBorderBird < it.y + this.pipeTop.h) || (
+                (rightBorderBird > it.x && leftBorderBird < it.x + this.pipeTop.w
+                    && bottomBorderBird > bottomPipeYPos && topBorderBird < bottomPipeYPos + this.pipeTop.h))) {
+                state.current = GAME_OVER;
+            }
             if (it.x + this.pipeTop.w <= 0) {
                 this.position.shift()
             }
+            it.x -= this.dx;
         }
     }
 
