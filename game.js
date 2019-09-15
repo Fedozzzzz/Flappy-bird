@@ -1,23 +1,28 @@
-// JAVASCRIPT CODE //
 
+//CONSTANTS AND VARIABLES
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 let frames = 0;
-
-const sprite = new Image();
-sprite.src = "img/sprite.png";
 
 const GET_READY = 0;
 const GAME = 1;
 const GAME_OVER = 2;
 const DEGREE = Math.PI / 180;
 
-
 const state = {
     current: 0
 };
 
-// ctx.drawImage(sprite, 0 , 0);
+const sprite = new Image();
+sprite.src = "img/sprite.png";
+
+//AUDIO
+const score_sound=new Audio("audio/sfx_point.wav");
+const die_sound=new Audio("audio/sfx_die.wav");
+const hit_sound=new Audio("audio/sfx_hit.wav");
+const flap_sound=new Audio("audio/sfx_flap.wav");
+const swooshing_sound=new Audio("audio/sfx_swooshing.wav");
+
 
 //CLASSES
 class GameObject {
@@ -28,15 +33,12 @@ class GameObject {
         this.y = y;
         this.w = w;
         this.h = h;
-        // this.draw=this.draw.bind(this);
     }
 
     update() {
     }
 
     draw() {
-        // console.log(ctx);
-        // ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
     }
@@ -74,6 +76,10 @@ class Bird extends GameObject {
         this.speed = -this.jump;
     }
 
+    speedReset() {
+        this.speed = 0;
+    }
+
     update() {
         let period = state.current === GET_READY ? 5 : 10;
         this.frame += frames % period === 0 ? 1 : 0;
@@ -88,7 +94,7 @@ class Bird extends GameObject {
                 this.y = canvas.height - fg.h - this.h / 2;
                 if (state.current === GAME) {
                     state.current = GAME_OVER;
-                    this.speed = 0;
+                    die_sound.play();
                 }
             }
 
@@ -134,12 +140,21 @@ class Pipes {
                 (rightBorderBird > it.x && leftBorderBird < it.x + this.pipeTop.w
                     && bottomBorderBird > bottomPipeYPos && topBorderBird < bottomPipeYPos + this.pipeTop.h))) {
                 state.current = GAME_OVER;
+                hit_sound.play();
             }
             if (it.x + this.pipeTop.w <= 0) {
-                this.position.shift()
+                this.position.shift();
+                score.value++;
+                score_sound.play();
+                score.best = Math.max(score.value, score.best);
+                localStorage.setItem("best", score.best);
             }
             it.x -= this.dx;
         }
+    }
+
+    reset() {
+        this.position = [];
     }
 
     draw() {
@@ -158,55 +173,13 @@ class Pipes {
 
 }
 
+
+//GAME OBJECTS
 //bird
 const bird = new Bird(0, 0, 34, 25, 50, 150,);
 
-// const bird = {
-//     animation: [
-//         {sX: 276, sY: 112},
-//         {sX: 276, sY: 139},
-//         {sX: 276, sY: 164},
-//         {sX: 276, sY: 139},
-//     ],
-//     x: 50,
-//     y: 150,
-//     w: 34,
-//     h: 25,
-//     frame: 0,
-//     draw: function () {
-//         let bird = this.animation[this.frame];
-//
-//         ctx.drawImage(sprite, bird.sX, bird.sY, this.w,
-//             this.h, this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
-//     }
-//
-// };
-
 //background
 const bg = new GameObject(0, 0, 275, 226, 0, canvas.height - 226);//draw x2
-
-// const bg = {
-//     sX: 0,
-//     sY: 0,
-//     w: 275,
-//     h: 226,
-//     x: 0,
-//     y: canvas.height - 226,
-//
-//
-//     draw: function () {
-//         console.log("Draw",sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-//         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-//         ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
-//
-//     }
-// };
-//
-// bg.draw = function () {
-//     // console.log("Draw",sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-//     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-//     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x + this.w, this.y, this.w, this.h);
-// };
 
 //foreground
 const fg = new GameObject(276, 0, 224, 112, 0, canvas.height - 112);
@@ -215,50 +188,79 @@ fg.update = function () {
     if (state.current === GAME) {
         this.x = (this.x - this.dx) % (this.w / 2);
     }
-}
+};
 //get ready
 const getReady = new GameObject(0, 228, 173, 152, canvas.width / 2 - 173 / 2, 80);
-
 
 //game over message
 const gameOverMsg = new GameObject(175, 228, 225, 202, canvas.width / 2 - 225 / 2, 90);
 
 getReady.draw = gameOverMsg.draw = function () {
-    // if (state.current === GET_READY) {
     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-    // }
 };
+
 //pipes
 const pipes = new Pipes(553, 0, 502, 0, 53, 400, canvas.width, 0);
-// const pipeTop = new GameObject(553, 0, 53, 400, canvas.width);
-// const pipeBottom = new GameObject(502, 0, 53, 400, canvas.width);
 
+const score = {
+    best: parseInt(localStorage.getItem("best")) || 0,
+    value: 0,
+    draw: function () {
+        ctx.fillStyle = "#FFF";
+        ctx.strokeStyle = "#000";
 
-//  = function () {
-//     // if (state.current === GAME_OVER) {
-//     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-//     // }
-// };
+        if (state.current === GAME) {
+            ctx.lineWidth = 2;
+            ctx.font = "45px Teko";
+            ctx.fillText(this.value, canvas.width / 2, 50);
+            ctx.strokeText(this.value, canvas.width / 2, 50);
+        } else if (state.current === GAME_OVER) {
+            ctx.font = "30px Teko";
+            ctx.fillText(this.value, 225, 186);
+            ctx.strokeText(this.value, 225, 186);
+            ctx.fillText(this.best, 225, 228);
+            ctx.strokeText(this.best, 225, 228);
+        }
+    },
+    reset: function () {
+        this.value = 0;
+    }
+};
 
-//event listener
+//start button
+const startBtn = {
+    x: 120,
+    y: 263,
+    w: 83,
+    h: 29
+};
+
+//EVENT LISTENER
 canvas.addEventListener("click", (e) => {
     switch (state.current) {
         case GET_READY:
             state.current = GAME;
+            swooshing_sound.play();
             break;
         case GAME:
             bird.flap();
+            flap_sound.play();
             break;
         case GAME_OVER:
-            state.current = GET_READY;
+            let rect = canvas.getBoundingClientRect();
+            let clickX = e.clientX - rect.left;
+            let clickY = e.clientY - rect.top;
+            if (clickX >= startBtn.x && clickX <= startBtn.x + startBtn.w
+                && clickY >= startBtn.y && clickY <= startBtn.y + startBtn.h) {
+                bird.speedReset();
+                pipes.reset();
+                score.reset();
+                state.current = GET_READY;
+            }
             break;
     }
     console.log(state);
 });
-
-
-// console.log(bg)
-//;
 
 //DRAWING
 function draw() {
@@ -274,8 +276,7 @@ function draw() {
     if (state.current === GAME_OVER) {
         gameOverMsg.draw()
     }
-    // bg.draw();
-
+    score.draw();
 }
 
 function update() {
