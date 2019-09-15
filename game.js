@@ -11,8 +11,7 @@ const GET_READY = 0;
 const GAME = 1;
 const GAME_OVER = 2;
 const DEGREE = Math.PI / 180;
-// const sprite = document.getElementById("source");
-// console.log(sprite);
+
 
 const state = {
     current: 0
@@ -20,7 +19,8 @@ const state = {
 
 // ctx.drawImage(sprite, 0 , 0);
 
-class GameImage {
+//CLASSES
+class GameObject {
     constructor(sX, sY, w, h, x, y) {
         this.sX = sX;
         this.sY = sY;
@@ -31,6 +31,9 @@ class GameImage {
         // this.draw=this.draw.bind(this);
     }
 
+    update() {
+    }
+
     draw() {
         // console.log(ctx);
         // ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
@@ -39,7 +42,7 @@ class GameImage {
     }
 }
 
-class Bird extends GameImage {
+class Bird extends GameObject {
     constructor(sX, sY, w, h, x, y) {
         super(sX, sY, w, h, x, y);
         this.animation = [
@@ -62,7 +65,7 @@ class Bird extends GameImage {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
         ctx.drawImage(sprite, bird.sX, bird.sY, this.w,
-            this.h, - this.w / 2, - this.h / 2, this.w, this.h);
+            this.h, -this.w / 2, -this.h / 2, this.w, this.h);
         ctx.restore();
     }
 
@@ -84,7 +87,7 @@ class Bird extends GameImage {
                 this.y = canvas.height - fg.h - this.h / 2;
                 if (state.current === GAME) {
                     state.current = GAME_OVER;
-                    this.speed=0;
+                    this.speed = 0;
                 }
             }
 
@@ -96,6 +99,50 @@ class Bird extends GameImage {
             }
         }
     }
+}
+
+class Pipes {
+    constructor(sTopX, sTopY, sBottomX, sBottomY, w, h, x, y) {
+        this.pipeTop = new GameObject(sTopX, sTopY, w, h, x, y);
+        this.pipeBottom = new GameObject(sBottomX, sBottomY, w, h, x, y);
+        this.position = [];
+        this.dx = 2;
+        this.maxYpos = -150;
+        this.gap = 85;
+        this.pipeTop.y = this.pipeBottom.y = this.maxYpos * (Math.random() + 1);
+    }
+
+    update() {
+        if (state.current !== GAME) return;
+
+        if (frames % 100 === 0) {
+            this.position.push({
+                x: canvas.width,
+                y: this.maxYpos * (Math.random() + 1)
+            })
+        }
+        for (let it of this.position) {
+            it.x -= this.dx;
+            if (it.x + this.pipeTop.w <= 0) {
+                this.position.shift()
+            }
+        }
+    }
+
+    draw() {
+        for (let it of this.position) {
+
+            let topYPos = it.y;
+            let bottomYPos = it.y + this.pipeBottom.h + this.gap;
+
+            ctx.drawImage(sprite, this.pipeTop.sX, this.pipeTop.sY, this.pipeTop.w, this.pipeTop.h,
+                it.x, topYPos, this.pipeTop.w, this.pipeTop.h);
+            ctx.drawImage(sprite, this.pipeBottom.sX, this.pipeBottom.sY, this.pipeBottom.w,
+                this.pipeBottom.h, it.x, bottomYPos, this.pipeBottom.w, this.pipeBottom.h);
+
+        }
+    };
+
 }
 
 //bird
@@ -123,7 +170,7 @@ const bird = new Bird(0, 0, 34, 25, 50, 150,);
 // };
 
 //background
-const bg = new GameImage(0, 0, 275, 226, 0, canvas.height - 226);//draw x2
+const bg = new GameObject(0, 0, 275, 226, 0, canvas.height - 226);//draw x2
 
 // const bg = {
 //     sX: 0,
@@ -149,7 +196,7 @@ const bg = new GameImage(0, 0, 275, 226, 0, canvas.height - 226);//draw x2
 // };
 
 //foreground
-const fg = new GameImage(276, 0, 224, 112, 0, canvas.height - 112);
+const fg = new GameObject(276, 0, 224, 112, 0, canvas.height - 112);
 fg.dx = 2;
 fg.update = function () {
     if (state.current === GAME) {
@@ -157,23 +204,28 @@ fg.update = function () {
     }
 }
 //get ready
-const getReady = new GameImage(0, 228, 173, 152, canvas.width / 2 - 173 / 2, 80);
+const getReady = new GameObject(0, 228, 173, 152, canvas.width / 2 - 173 / 2, 80);
 
 
 //game over message
-const gameOverMsg = new GameImage(175, 228, 225, 202, canvas.width / 2 - 225 / 2, 90);
+const gameOverMsg = new GameObject(175, 228, 225, 202, canvas.width / 2 - 225 / 2, 90);
 
-getReady.draw = function () {
+getReady.draw = gameOverMsg.draw = function () {
     // if (state.current === GET_READY) {
     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
     // }
 };
+//pipes
+const pipes = new Pipes(553, 0, 502, 0, 53, 400, canvas.width, 0);
+// const pipeTop = new GameObject(553, 0, 53, 400, canvas.width);
+// const pipeBottom = new GameObject(502, 0, 53, 400, canvas.width);
 
-gameOverMsg.draw = function () {
-    // if (state.current === GAME_OVER) {
-    ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
-    // }
-};
+
+//  = function () {
+//     // if (state.current === GAME_OVER) {
+//     ctx.drawImage(sprite, this.sX, this.sY, this.w, this.h, this.x, this.y, this.w, this.h);
+//     // }
+// };
 
 //event listener
 canvas.addEventListener("click", (e) => {
@@ -200,6 +252,7 @@ function draw() {
     ctx.fillStyle = "#70c5ec";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     bg.draw();
+    pipes.draw();
     fg.draw();
     bird.draw();
     if (state.current === GET_READY) {
@@ -215,6 +268,7 @@ function draw() {
 function update() {
     bird.update();
     fg.update();
+    pipes.update();
 }
 
 function loop() {
